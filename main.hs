@@ -23,14 +23,24 @@ id' v@(Atom _) = v
 id' lexp@(Lambda _ _) = lexp
 id' lexp@(Apply _ _) = lexp 
 
+generate :: [Char] -> [String]
+generate char = Prelude.map (:[]) char
+
+
 reducer :: Lexp -> Lexp
-reducer v@(Atom _) = v
-reducer lexp@(Lambda x m) = Lambda x (reducer m)
-reducer lexp@(Apply m e) = reduce (reducer m) (reducer e)
+reducer ex = do
+    let set1 = Set.fromList (generate ['a'..'z'])
+    alpha set1 ex
+
+
+beta :: Lexp -> Lexp
+beta v@(Atom _) = v
+beta lexp@(Lambda x e) = Lambda x (beta e)
+beta lexp@(Apply l r) = reduce (beta l) (beta r)
 
 reduce :: Lexp -> Lexp -> Lexp
-reduce (Lambda x e) m = reducer (trav_lexp x e m)	-- (\x.e m)
-reduce x y = Apply x y															-- (x y)
+reduce (Lambda x e) m = beta (trav_lexp x e m)
+reduce l r = Apply l r
 
 trav_lexp :: String -> Lexp -> Lexp -> Lexp
 trav_lexp x e@(Atom _) m = replace x e m
@@ -44,18 +54,33 @@ trav_lexp x (Apply a b) m = Apply (trav_lexp x a m) (trav_lexp x b m)
 replace :: String -> Lexp -> Lexp -> Lexp
 replace a b@(Atom x) c = if x == a then c else b
 
-alpha :: Lexp -> Lexp
-alpha Lambda(x m) = rename x m
 
-rename :: String -> Lexp -> Lexp
-rename x (Lambda _ lexp) = rename x lexp
-rename x (Apply lexp _) = trav_second x lexp
+-- Recursively find eta-convertable expressions \x.(f y)
+eta :: Lexp -> Lexp
+eta v@(Atom _) = v
+eta lexp@(Lambda x (Apply l r)) = convert x l r
+eta lexp@(Lambda x e) = Lambda x (eta e)
+eta lexp@(Apply l r) = Apply (eta l) (eta r)
 
-trav_second :: String -> Lexp -> Lexp
-trav_second x e@(Atom _) = 
+-- Check x == y and x is not free in f
+convert :: String -> Lexp -> Lexp -> Lexp
+convert x a@(Atom v) b@(Atom vx) = if x == vx && a /= b then Atom v else Lambda x (Apply a b)
+convert x a@(Apply l r) b@(Atom vx) = if x == vx && l /= b && r /= b then eta (Apply l r) else Lambda x (Apply a b)
+convert x a b = Lambda x (Apply a b)
 
-a_rename :: String -> Lexp -> Lexp
-a_rename a b@(Atom x) = if x == a then 
+alpha :: Set String -> Lexp -> Lexp
+alpha s v@(Atom _) = v
+alpha s (Lambda x m) = Lambda new (alpha new_set (a_rename new x m)) where
+    temp_set = Set.delete x s
+    tuple = (Set.deleteFindMin temp_set)
+    new = fst(tuple)
+    new_set = snd(tuple)
+alpha s lexp@(Apply a b) = Apply (alpha s a) (alpha s b)
+
+a_rename :: String -> String -> Lexp -> Lexp
+a_rename x y m@(Atom b) = if y == b then Atom x else m
+a_rename x y m@(Lambda l r) = Lambda l (a_rename x y r)
+a_rename x y m@(Apply l r) = Apply (a_rename x y l) (a_rename x y r)
 
 
 -- Entry point of program

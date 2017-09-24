@@ -6,4 +6,3 @@
 (((\b.\t.\e.((b t) e) \x.\y.x) x) y)
 \x.((\x.(y x) \x.(z x)) x)
 (\y.(\x.\y.(x y) y) (y w))
-x
