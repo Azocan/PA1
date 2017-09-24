@@ -48,8 +48,15 @@ alpha :: Lexp -> Lexp
 alpha Lambda(x m) = rename x m
 
 rename :: String -> Lexp -> Lexp
-rename x (Lambda _ lexp) = 
-rename x (Apply _ lexp) =
+rename x (Lambda _ lexp) = rename x lexp
+rename x (Apply lexp _) = trav_second x lexp
+
+trav_second :: String -> Lexp -> Lexp
+trav_second x e@(Atom _) = 
+
+a_rename :: String -> Lexp -> Lexp
+a_rename a b@(Atom x) = if x == a then 
+
 
 -- Entry point of program
 main = do
