@@ -12,10 +12,12 @@ data Lexp = Atom String | Lambda String Lexp | Apply Lexp Lexp deriving Eq
 
 -- Allow for Lexp datatype to be printed like the Oz representation of a lambda expression
 instance Show Lexp  where 
+    --show (Atom v) = "atom: " ++ v ++ "\n"
+    --show (Lambda exp1 exp2) = "lambda\\" ++ exp1 ++ "." ++ (show exp2) ++ "\n}\n"
+    --show (Apply exp1 exp2) = "apply(" ++ (show exp1) ++ " " ++ (show exp2) ++ ")\n]\n" 
     show (Atom v) = v
-    show (Lambda exp1 exp2) = "\\" ++ exp1 ++ "." ++ (show exp2) 
-    show (Apply exp1 exp2) = "(" ++ (show exp1) ++ " " ++ (show exp2) ++ ")" 
-
+    show (Lambda exp1 exp2) = "\\" ++ exp1 ++ "." ++ (show exp2)
+    show (Apply exp1 exp2) = "(" ++ (show exp1) ++ " " ++ (show exp2) ++ ")"
 
 -- Reserved keywords in Oz
 -- P. 841 Table C.8, "Concepts, Techniques, and Models of Computer Programming", 
